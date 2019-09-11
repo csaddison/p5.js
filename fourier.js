@@ -138,6 +138,18 @@ function draw() {
 
     }
 
+    let str = 'Draw different epicycloid curves by changing the frequency and amplitude sliders.\
+    Check the "Harmonics" option to force closed periodic curves.\
+    Control the speed with the mouse scroll wheel, press Shift to pause, and double-click to clear the canvas.';
+
+    fill(100);
+    text(str,
+        margin - 30,
+        freq[octaves-1].y - 95 + 30 + 90,
+        margin + 30 + 95,
+        freq[octaves-1].y - 95 + 30 + 150
+    )
+
 
 
 
