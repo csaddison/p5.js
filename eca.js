@@ -9,6 +9,7 @@ TODO:
 */
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // Initialize variables
@@ -21,6 +22,15 @@ let grid = new Array();
 let cellSize = canvasWidth / columns;
 let fr = 10;
 let simIsRunning = false;
+let colorPick = 0;
+let colorList = [
+    'indigo',
+    'yellowgreen',
+    'darkred',
+    'cyan',
+    'coral',
+    'magenta'
+]
 
 canvasHeight = rows * cellSize;
 
@@ -35,6 +45,7 @@ class Cell {
         this.row = row;
         this.isActivated = false;
         this.pastState = this.isActivated;
+        this.position = [column, row];
     }
 
     // Updates past state memory
@@ -83,18 +94,110 @@ class Cell {
 
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Specific shape-drawing class
+class Shape {
+
+    constructor() {
+        this.options = new Array()
+        this.option = 0
+        this.shapes = {
+
+            'blinker': [[1], [1], [1]],
+
+            'pent': [[0,1,0], [0,1,0], [1,0,1], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [1,0,1], [0,1,0], [0,1,0]],
+
+            'pulsar': [[1,1,1], [1,0,1], [1,1,1], [0,0,0], [0,0,0], [0,0,0], [1,1,1], [1,0,1], [1,1,1]],
+
+            'herschel': [[1,1,1,0], [0,1,0,0], [0,1,1,1]],
+
+            'gosper': [
+                [0,0,0,0,1,1,0,0,0], [0,0,0,0,1,1,0,0,0],                                                                   // left block
+                [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0],                         // zeros
+                [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0],                         // zeros
+                [0,0,0,0,1,1,1,0,0], [0,0,0,1,0,0,0,1,0], [0,0,1,0,0,0,0,0,1], [0,0,1,0,0,0,0,0,1],                         // left shuttle 1/2
+                [0,0,0,0,0,1,0,0,0], [0,0,0,1,0,0,0,1,0], [0,0,0,0,1,1,1,0,0], [0,0,0,0,0,1,0,0,0],                         // left shuttle 2/2
+                [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0],                                                                   // zeros
+                [0,0,1,1,1,0,0,0,0], [0,0,1,1,1,0,0,0,0], [0,1,0,0,0,1,0,0,0], [0,0,0,0,0,0,0,0,0], [1,1,0,0,0,1,1,0,0],    // right shuttle
+                [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0],    // zeros
+                [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0],                         // zeros
+                [0,0,1,1,0,0,0,0,0], [0,0,1,1,0,0,0,0,0]                                                                    // right block
+            ]
+        }
+        for (var key in this.shapes) {
+            this.options.push(key);
+        }
+        this.ID = this.options[this.option];
+    }
+
+    // Checks if cell is in environment
+    checkExistance(environment, column, row) {
+        if (environment[column][row]) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // Change shape
+    changeShape(isNext) {
+
+        if (isNext && (this.option < this.options.length - 1)) {
+            this.option += 1;
+            this.ID = this.options[this.option]
+            colorPick += 1
+        } else if ((! isNext) && (this.option > 0)) {
+            this.option -= 1;
+            this.ID = this.options[this.option]
+            colorPick -= 1
+        }
+
+    }
+
+    // Draw shape
+    drawShape(leftColumn, topRow) {
+
+        let chosenShape = this.ID;
+        let thisShape = this.shapes[chosenShape];
+        console.log(chosenShape)
+
+        for (var offsetColumn = 0; offsetColumn < thisShape.length; offsetColumn++){
+            for (var offsetRow = 0; offsetRow < thisShape[0].length; offsetRow++) {
+
+                let thisColumn = leftColumn + offsetColumn;
+                let thisRow = topRow + offsetRow;
+                let thisCell = grid[thisColumn][thisRow];
+                thisCell.setState(thisShape[offsetColumn][offsetRow]);
+
+            }
+        }
+    }
+
+
+
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // Setup function
 function setup() {
 
     createCanvas(canvasWidth, canvasHeight);
     frameRate(fr);
+    newShape = new Shape();
 
     for (var column = 0; column < columns; column++) {
         
         thisColumn = new Array();
         for (var row = 0; row < rows; row++) {
             let newCell = new Cell(column, row);    // Creating cells on grid
-            newCell.setState(Math.floor(Math.random() * 2))
+            //newCell.setState(Math.floor(Math.random() * 2));
             thisColumn[row] = newCell;
         }
         grid[column] = thisColumn;
@@ -110,12 +213,10 @@ function setup() {
 // Draw loop
 function draw() {
 
-    console.log('==================================================')
-
-    background('white');
-    stroke(220);
+    background(25);
+    stroke(15);
     strokeWeight(.5);
-    fill(0);
+    fill(colorList[colorPick]);
 
     // Drawing grid
     for (var i = 0; i <= width; i += cellSize) {
@@ -153,6 +254,9 @@ function draw() {
 
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // Click to change state
 function mouseReleased() {
 
@@ -173,11 +277,26 @@ function mouseReleased() {
 
 
 
+// Resets grid to blank
+function doubleClicked() {
+
+    for (var column = 0; column < columns; column++) {
+        for (var row = 0; row < rows; row++) {
+            let thisCell = grid[column][row];
+            thisCell.setState(false);
+        }
+    }
+
+}
+
+
+
+
 // Keyboard interaction
 function keyPressed() {
 
     // Pauses sim
-    if (keyCode === SHIFT) {
+    if (keyCode == SHIFT) {
         if (simIsRunning) {
             simIsRunning = false    // Pausing sim
         } else {
@@ -186,13 +305,27 @@ function keyPressed() {
     }
 
     // Resets grid
-    if (keyCode === CONTROL) {
+    if (keyCode == CONTROL) {
         for (var column = 0; column < columns; column++) {
             for (var row = 0; row < rows; row++) {
-                let newCell = grid[column][row];
-                newCell.setState(Math.floor(Math.random() * 2))
+                let thisCell = grid[column][row];
+                thisCell.setState(Math.floor(Math.random() * 2));
             }
         }
+    }
+
+    // Click "A" to draw shape
+    if (keyCode == 65) {
+        let cursorColumn = Math.floor(mouseX / cellSize);
+        let cursorRow = Math.floor(mouseY / cellSize);
+        newShape.drawShape(cursorColumn, cursorRow);
+    }
+
+    // Click ">" and "<" to change shape
+    if (keyCode == 190) {
+        newShape.changeShape(true)
+    } else if (keyCode == 188) {
+        newShape.changeShape(false)
     }
 
 }
