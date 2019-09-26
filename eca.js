@@ -197,7 +197,7 @@ function setup() {
         thisColumn = new Array();
         for (var row = 0; row < rows; row++) {
             let newCell = new Cell(column, row);    // Creating cells on grid
-            //newCell.setState(Math.floor(Math.random() * 2));
+            newCell.setState(Math.floor(Math.random() * 2)); // Comment out to set the initial state to false
             thisColumn[row] = newCell;
         }
         grid[column] = thisColumn;
