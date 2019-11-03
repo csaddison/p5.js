@@ -55,6 +55,7 @@ function crossVectors(vec1, vec2) {
     return vector;
 }
 
+// Scalar magnitude of arbitrary dimensional vector
 function getMagnitude(vec) {
     let magnitude = 0;
     for (var elem of vec) {
@@ -64,4 +65,12 @@ function getMagnitude(vec) {
     return magnitude;
 }
 
-export {addVectors, subVectors, dotVectors, crossVectors, getMagnitude};
+// Matrix rotation of 2-dimensional vectors in degrees
+function rotateVector(vec, angle) {
+    let theta = angle * Math.PI / 180;
+    let x = Math.cos(theta) * vec[0] - Math.sin(theta) * vec[1];
+    let y = Math.sin(theta) * vec[0] + Math.cos(theta) * vec[1];
+    return [x, y];
+}
+
+// export {addVectors, subVectors, dotVectors, crossVectors, getMagnitude};
