@@ -1,5 +1,5 @@
 //
-// 10.20.19
+// 11.17.19
 // Random Walk Agents
 //
 
@@ -59,99 +59,85 @@ class Agent {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Food class
-class Food {
+class Histogram {
 
-    constructor(posX, posY) {
-        this.position = [posX, posY];
-        this.value = 1;
-        this.size = 3;
-    }
-
-    // Changes eaten food
-    setValue(value) {
-        this.value = value;
-    }
-
-    // Draws food particles
-    drawFood() {
-        noStroke();
-        fill('lime');
-        circle(this.position[0], this.position[1], this.size);
-    }
-    
-}
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// Animal class extension
-class Animal extends Agent {
-
-    // Sets and adds health parameter
-    setHealth(health) {
-        this.health = health;
-    }
-
-    // Radius at which animals will go toward food
-    setSense(radius) {
-        this.senseRadius = radius;
-    }
-
-    // Rate at which animals lose health
-    setEnergyCost(cost) {
-        this.cost = cost;
-    }
-
-    // Checks if animal has enough health to reproduce
-    willReproduce(threshold) {
-        if (this.health >= threshold) {
-            return true;
+    constructor(bins) {
+        this.numBins = bins;
+        this.width = 100;
+        this.height = 100;
+        this.border = 10;
+        this.hasTicks = true;
+        this.bins = [];
+        // Empty bins
+        for (var i=0; i < this.numBins; i++) {
+            this.bins[i] = 0;
         }
     }
 
-    // Eats food, adds health, and empties value
-    eat(food) {
-        this.health += food.value;
-        food.setValue(0);
+    positionFigure(width, height, left, bottom) {
+        this.width = width;
+        this.height = height;
+        this.leftSide = left;
+        this.baseLine = bottom;
+        this.binEdges = [left];
+        // Bin edges
+        for (var i=1; i < this.numBins; i++) {
+            let widthRatio = i / this.numBins;
+            let binEdge = this.width * widthRatio;
+            this.binEdges.push(binEdge);
+        }
+        this.binEdges.push(left + width);
     }
 
-    // Checks if food is nearby and if they're close enough to eat
-    checkForFood(foods) {
-        for (var i=0; i < foods.length; i++) {
-            let distance = Math.abs(super.subtractVectors(this.position, foods[i].position));
-            if (distance <= this.senseRadius && distance >= 0) {
-                if (distance <= this.stepSize / 2 && distance >= 0) {
-                    this.eat(foods[i]);
-                    this.foodIsNearby = false;
-                } else {
-                    this.foodIsNearby = true;
+    normalize(maximum) {
+        this.maximum = maximum;
+    }
+
+    drawGrid() {
+        stroke(255);
+
+        let left = this.leftSide;
+        let right = this.leftSide + this.width;
+        let bottom;
+        if (this.hasTicks) {
+
+            bottom = this.baseLine - this.border;
+            line(left, bottom, right, bottom);
+
+            for (var edge of this.binEdges) {
+                line(edge, this.baseLine, edge, this.baseLine - this.border);
+            }
+
+        } else {
+            bottom = this.baseLine;
+            line(left, bottom, right, bottom);
+        }
+    }
+
+    binData(agents) {
+        // Empty bins
+        for (var i=0; i < this.numBins; i++) {
+            this.bins[i] = 0;
+        }
+        for (var agent of agents) {
+            for (var i=0; i < this.numBins; i++) {
+                if (agent.position[0] > this.binEdges[i] && agent.position[0] < this.binEdges[i+1]) {
+                    this.bins[i] += 1;
                 }
-            } else {
-                this.foodIsNearby = false;
             }
         }
     }
 
-    // Movement of animal changes, brownian motion vs. directly to food in sense radius
-    stepAgent() {
-        if (this.foodIsNearby) {
-            let tempDir = super.subtractVectors(this.position, foodPositions[i]);
-            let tempMag = Math.sqrt(tempDir[0]**2 + tempDir[1]**2);
-            this.direction = [
-                this.stepSize * tempDir[0] / tempMag,
-                this.stepSize * tempDir[1] / tempMag
-            ]
-            this.position = this.addVectors(this.position, this.direction);
-        } else {
-            super.stepAgent()
-            this.health -= this.cost;
+    drawBins() {
+        noStroke();
+        fill(255);
+        for (var i=0; i < this.numBins; i++) {
+            let binHeight = this.height * this.bins[i] / this.maximum;
+            let left = this.binEdges[i];
+            let binWidth = this.width / this.numBins;
+            rect(left, this.baseLine - (this.border + binHeight), binWidth, binHeight);
         }
     }
-
 }
 
 
@@ -162,88 +148,39 @@ class Animal extends Agent {
 
 // Initialize variables
 let w = 500;
-    h = 500;
+    h = 800;
 let fr = 60;
-let epochTime = fr * 60;
-let numAnimals = 3;
-    numFood = 20;
-let animals = [];
-let foods = [];
-let health = 10;
-let sense = 50;
-let speed = 3;
-let cost = .05;
-
-// Removes empty food after each step
-function removeFromList(list, index) {
-    list.splice(index, 1);
-}
+let numAgents = 10000;
+let agents = [];
+let bins = 90;
+let hist = new Histogram(bins);
+let size = 2;
+    speed = 5;
 
 // Setup function
 function setup() {
     createCanvas(w, h);
     frameRate(fr);
-    for (var i=0; i < numAnimals; i++) {
-        let animal = new Animal(w/2, h/2);
-        animal.setHealth(health);
-        animal.setSense(sense);
-        animal.setStepSize(speed);
-        animal.setEnergyCost(cost);
-        animals[i] = animal;
+    for (var i=0; i < numAgents; i++) {
+        agents[i] = new Agent(w/2, 250);
+        agents[i].size = size;
+        agents[i].stepSize = speed;
     }
-    for (var j=0; j < numFood; j++) {
-        foods[j] = new Food(Math.random() * w, Math.random() * h);
-    }
-    
+    hist.positionFigure(w, h, 0, h - 5);
+    hist.normalize(numAgents);
 }
 
 // Draw loop
 function draw() {
-    background(15);
-    for (var i=0; i < foods.length; i++) {
-        foods[i].drawFood();
+    background(0);
+    for (var i=0; i < agents.length; i++) {
+        let agent = agents[i];
+        let c = color(i*200/numAgents, 255/(i+1), 255);
+        agent.stepAgent();
+        agent.drawAgent(c);
     }
-    for (var i=0; i < animals.length; i++) {
-        let animal = animals[i];
-        animal.checkForFood(foods);
-        animal.stepAgent();
-        animal.drawAgent('chocolate');
-    }
+
+    hist.drawGrid();
+    hist.binData(agents);
+    hist.drawBins();
 }
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-/*
-
-// Initialize variables
-let w = 500;
-    h = 500;
-let fr = 60;
-let N = 100;
-let agents = [];
-
-// Setting up canvas
-function setup() {
-    createCanvas(w, h);
-    frameRate(fr)
-    for (var i=0; i < N; i++) {
-        agents[i] = new Agent(w/2, h/2);
-    }
-}
-
-function draw() {
-
-    background('rgba(0,0,0, 0.1)');
-
-    for (var i=0; i < N; i++) {
-        let c = color(255, 255/(i+1), i*255/N);
-        agents[i].drawAgent(c);
-        agents[i].stepAgent();
-    }
-}
-
-*/

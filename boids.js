@@ -205,7 +205,7 @@ function draw() {
         boid.draw();
 
         boid.findNeighbors(flock);
-        boid.align();
+        //boid.align();
 
         boid.move();
         boid.loopBoundaries(w, h);
