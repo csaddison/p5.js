@@ -238,7 +238,6 @@ function setup() {
 
 
 // Draw loop
-let i = 0;
 function draw() {
 
     background(25);
@@ -259,10 +258,7 @@ function draw() {
         ant.changeState(antCell);
         ant.moveAnt();
         ant.checkBoundaries(grid);
-        console.log(i)
-        i+=1;
-
+        
     }
 
 }
-
