@@ -16,16 +16,6 @@ class Agent {
         this.direction = [];
     }
 
-    // Sets visual size
-    setSize(size) {
-        this.size = size;
-    }
-
-    // Sets step size, controlling speed and eating radius
-    setStepSize(stepSize) {
-        this.stepSize = stepSize;
-    }
-
     // Two mathematical helper functions
     addVectors(vec1, vec2) {
         return [vec1[0] + vec2[0], vec1[1] + vec2[1]];
@@ -91,24 +81,17 @@ class Food {
 // Animal class extension
 class Animal extends Agent {
 
-    // Sets and adds health parameter
-    setHealth(health) {
-        this.health = health;
-    }
-
-    // Radius at which animals will go toward food
-    setSense(radius) {
-        this.senseRadius = radius;
-    }
-
-    // Rate at which animals lose health
-    setEnergyCost(cost) {
-        this.cost = cost;
+    // Adds new animal properties
+    initializeAnimal() {
+        this.health = 10;
+        this.senseRadius = 15;
+        this.cost = 0.5;
+        this.threshold = 1;
     }
 
     // Checks if animal has enough health to reproduce
-    willReproduce(threshold) {
-        if (this.health >= threshold) {
+    willReproduce() {
+        if (this.health >= this.threshold) {
             return true;
         }
     }
@@ -121,11 +104,11 @@ class Animal extends Agent {
 
     // Checks if food is nearby and if they're close enough to eat
     checkForFood(foods) {
-        for (var i=0; i < foods.length; i++) {
-            let distance = Math.abs(super.subtractVectors(this.position, foods[i].position));
-            if (distance <= this.senseRadius && distance >= 0) {
-                if (distance <= this.stepSize / 2 && distance >= 0) {
-                    this.eat(foods[i]);
+        for (food of foods) {
+            let distance = Math.abs(super.subtractVectors(this.position, food.position));
+            if (distance <= this.senseRadius) {
+                if (distance < this.stepSize / 2) {
+                    this.eat(food);
                     this.foodIsNearby = false;
                 } else {
                     this.foodIsNearby = true;
@@ -148,7 +131,7 @@ class Animal extends Agent {
             this.position = this.addVectors(this.position, this.direction);
         } else {
             super.stepAgent()
-            this.health -= this.cost;
+            //this.health -= this.cost;
         }
     }
 
@@ -161,18 +144,14 @@ class Animal extends Agent {
 
 
 // Initialize variables
-let w = 500;
-    h = 500;
-let fr = 60;
-let epochTime = fr * 60;
+let w = 800;
+    h = 800;
+let fr = 1;
+let epochTime = 20;
 let numAnimals = 3;
     numFood = 20;
 let animals = [];
 let foods = [];
-let health = 10;
-let sense = 50;
-let speed = 3;
-let cost = .05;
 
 // Removes empty food after each step
 function removeFromList(list, index) {
@@ -183,12 +162,10 @@ function removeFromList(list, index) {
 function setup() {
     createCanvas(w, h);
     frameRate(fr);
+    epochTime *= fr;
     for (var i=0; i < numAnimals; i++) {
         let animal = new Animal(w/2, h/2);
-        animal.setHealth(health);
-        animal.setSense(sense);
-        animal.setStepSize(speed);
-        animal.setEnergyCost(cost);
+        animal.initializeAnimal();
         animals[i] = animal;
     }
     for (var j=0; j < numFood; j++) {
@@ -247,3 +224,201 @@ function draw() {
 }
 
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+// 1.27.20
+// Natural Selection Agents
+//
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Basic brownian motion agent
+class Agent {
+
+    constructor(posX, posY) {
+        this.position = [posX, posY];
+        this.size = 7;
+        this.stepSize = 3;
+        this.direction = [];
+    }
+
+    // Two mathematical helper functions
+    addVectors(vec1, vec2) {
+        return [vec1[0] + vec2[0], vec1[1] + vec2[1]];
+    }
+    subtractVectors(vec1, vec2) {
+        return [vec1[0] - vec2[0], vec1[1] - vec2[1]];
+    }
+
+    // Controls movement of agent
+    stepAgent() {
+        let r = Math.random() * 2 * Math.PI;
+        this.direction = [
+            this.stepSize * Math.cos(r),
+            this.stepSize * Math.sin(r)
+        ]
+        this.position = this.addVectors(this.position, this.direction);
+    }
+
+    // Draws agent
+    drawAgent(color) {
+        noStroke();
+        fill(color);
+        circle(this.position[0], this.position[1], this.size);
+    }
+
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Animal class extension
+class Animal extends Agent {
+
+    // Adds new animal properties
+    initializeAnimal() {
+        this.health = 20;
+        this.cost = 0.5;
+        this.isAlive = true;
+    }
+
+    // Movement of animal
+    stepAgent() {
+        super.stepAgent();
+        this.health -= this.cost;
+    }
+
+    // Check living status
+    checkIfAlive() {
+        if (this.health <= 0) {
+            this.isAlive = false;
+        }
+    }
+
+    // Mathematical helper functions
+    normalizeVector(vector) {
+        return 
+    }
+
+    // Changes direction to food
+    goToFood(food) {
+        this.direction = super.subtractVectors(food.position, this.position);
+        // console.log(this.direction)
+    }
+
+    
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Food class
+class Food {
+
+    constructor(posX, posY) {
+        this.position = [posX, posY];
+        this.value = 1;
+        this.size = 3;
+    }
+
+    // Draws food particles
+    drawFood() {
+        noStroke();
+        fill('lime');
+        circle(this.position[0], this.position[1], this.size);
+    }
+    
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Initialize variables
+let w = 500;
+    h = 500;
+let fr = 3;
+let numAnimals = 1;
+    numFood = 1;
+let animals = [];
+    foods = [];
+
+// Setting up canvas
+function setup() {
+    createCanvas(w, h);
+    frameRate(fr)
+
+    for (var i=0; i < numAnimals; i++) {
+        let animal = new Animal(w/2, h/2);
+        animal.initializeAnimal();
+        animals[i] = animal;
+    }
+
+    for (var j=0; j < numFood; j++) {
+        foods[j] = new Food(Math.random() * w, Math.random() * h);
+    }
+}
+
+function draw() {
+
+    background(0);
+
+    for (food of foods) {
+        food.drawFood();
+    }
+
+    for (animal of animals) {
+        if (animal.isAlive) {
+            animal.drawAgent('red');
+            //animal.stepAgent();
+            animal.goToFood(foods[0]);
+            animal.checkIfAlive();
+        } else {
+            console.log('animal died')
+        }
+    }
+}

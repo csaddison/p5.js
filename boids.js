@@ -87,7 +87,7 @@ class Boid {
         this.size = 8;
         this.position = [];
         this.velocity = [];
-        this.orientation = 0; // Range from -180 to 180
+        this.orientation = 0; // Range from 0 to 360
         this.radius = 100;
         this.speed = 3;
         this.avoidance = 1;
@@ -98,7 +98,11 @@ class Boid {
 
     initialize(canvasWidth, canvasHeight) {
         this.position = [Math.random() * canvasWidth, Math.random() * canvasHeight];
-        this.orientation = (Math.random() * 360) - 180;
+        this.orientation = Math.random() * 360; // Up is 0*
+        this.velocity = [Math.sin(this.orientation * Math.PI / 180) * this.speed, -Math.cos(this.orientation * Math.PI / 180) * this.speed];
+    }
+
+    getVelocity() {
         this.velocity = [Math.sin(this.orientation * Math.PI / 180) * this.speed, -Math.cos(this.orientation * Math.PI / 180) * this.speed];
     }
 
@@ -150,19 +154,15 @@ class Boid {
     }
 
     align() {
-        this.alignRatio = .1
-
-        let groupVelocity = [0, 0];
-        for (boid of this.neighbors) {
-            groupVelocity = addVectors(groupVelocity, boid.velocity);
-        }
-        for (var elem of groupVelocity) {
-            elem /= this.neighbors.length;
-        }
-
-        this.velocity = addVectors(this.velocity, groupVelocity * this.alignRatio);
-        for (var elem of this.velocity) {
-            elem = elem / getMagnitude(this.velocity) * this.speed;
+        if (this.neighbors.length > 0) {
+            let alignRatio = .1;
+    
+            let groupOrientation = 0;
+            for (boid of this.neighbors) {
+                groupOrientation += boid.orientation;
+            }
+            groupOrientation /= this.neighbors.length;
+            this.orientation = ( alignRatio * groupOrientation ) + ( (1 - alignRatio) * this.orientation );
         }
     }
 
@@ -177,9 +177,9 @@ class Boid {
 
 
 // Initialize variables
-let w = 500;
-    h = 500;
-let N = 10;
+let w = 800;
+    h = 800;
+let N = 20;
 let fr = 10;
 let flock = [];
 
@@ -205,7 +205,8 @@ function draw() {
         boid.draw();
 
         boid.findNeighbors(flock);
-        //boid.align();
+        boid.align();
+        boid.getVelocity()
 
         boid.move();
         boid.loopBoundaries(w, h);
@@ -216,6 +217,6 @@ function draw() {
     circle(flock[0].position[0], flock[0].position[1], flock[0].radius * 2);
 
     flock[0].findNeighbors(flock);
-    console.log(flock[0].neighbors)
+    // console.log(flock[0].neighbors)
 
 }
