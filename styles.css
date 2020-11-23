@@ -1,0 +1,88 @@
+/* Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap');
+
+
+/* Body Styling */
+* {
+    box-sizing: border-box;
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    /* background-color: black; */
+    background-image: linear-gradient(black, #050509);
+    background-attachment: fixed;
+    color: #ffeabb;
+    font-family: 'Courier New', Courier, monospace;
+    width: 80vw;
+}
+
+h1 {
+    text-align: center;
+    font-size: 25vmax;
+    font-family: 'Comfortaa', sans-serif;
+    background: -webkit-linear-gradient(#3a3333, #00000000);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    left: 15vw;
+}
+
+.content {
+    padding-left: 8.3vw;
+    width: 80vw;
+    position: relative;
+    top: -4vmax;
+}
+
+h2 {
+    font-family: 'Raleway', sans-serif;
+    font-size: 3vmax;
+}
+
+
+/* List Styling */
+dl {
+    text-align: left;
+    padding-left: 4vw;
+}
+    
+dt {
+    color: #ffeabb;
+    margin-top: 2em;
+}
+
+dd {
+    color: #ffeabb60;
+    padding-left: 3ch;
+    padding-top: .5ch;
+}
+
+.idNumber {
+    color: orangered;
+}
+
+
+/* Link Styling */
+a {
+    text-decoration: none;
+}
+
+a:link {
+    color: #ffeabb;
+}
+
+a:visited {
+    color: #ffeabb;
+}
+
+a:hover {
+    color: orangered;
+    text-decoration: underline;
+}
+
+a:active {
+    color: orangered;
+}
